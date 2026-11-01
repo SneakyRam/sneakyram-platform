@@ -1,0 +1,15 @@
+---
+import ProjectCard from '../../components/ProjectCard.astro';
+import Base from '../../layouts/Base.astro';
+import { getProjects } from '../../lib/posts';
+
+const projects = await getProjects();
+---
+
+<Base title="Projects" description="What I'm building, and the build log for each one.">
+  <h1>Projects</h1>
+  <p class="lead">Each project has a page and a build log: the posts I write while making it.</p>
+  <div class="grid">
+    {projects.map((project) => <ProjectCard project={project} />)}
+  </div>
+</Base>

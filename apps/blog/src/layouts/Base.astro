@@ -1,0 +1,69 @@
+---
+import '../styles/global.css';
+import { LINKS, SITE } from '../consts';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article';
+}
+
+const { title, description = SITE.description, type = 'website' } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.title}` : `${SITE.title} · ${SITE.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const path = Astro.url.pathname;
+const current = (href: string) => (path.startsWith(href) ? 'page' : undefined);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE.author} />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.title} ${SITE.tagline}`} href="/rss.xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={`${SITE.title} ${SITE.tagline}`} />
+    <meta name="twitter:card" content="summary" />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <nav class="wrap nav" aria-label="Main">
+        <a class="brand" href="/">
+          <span class="prompt" aria-hidden="true">~/</span>sneakyram<span class="muted">/blog</span>
+        </a>
+        <ul>
+          <li><a href="/posts/" aria-current={current('/posts/')}>Posts</a></li>
+          <li><a href="/projects/" aria-current={current('/projects/')}>Projects</a></li>
+          <li><a href={LINKS.writeups}>Write-ups</a></li>
+          <li><a href="/search/" aria-current={current('/search/')}>Search</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="wrap">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <p>© {new Date().getFullYear()} {SITE.author}</p>
+        <ul class="footer-links">
+          <li><a href={LINKS.portfolio}>Portfolio</a></li>
+          <li><a href={LINKS.github}>GitHub</a></li>
+          <li><a href={LINKS.linkedin}>LinkedIn</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate } from '../lib/posts';
+
+interface Props {
+  posts: CollectionEntry<'posts'>[];
+  empty?: string;
+}
+
+const { posts, empty = 'Nothing published here yet.' } = Astro.props;
+---
+
+{
+  posts.length === 0 ? (
+    <p class="muted">{empty}</p>
+  ) : (
+    <ul class="post-list">
+      {posts.map((post) => (
+        <li>
+          <a class="post-title" href={`/posts/${post.id}/`}>
+            {post.data.title}
+          </a>
+          <p class="meta">
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+            {post.data.draft && <span class="badge">draft</span>}
+          </p>
+          <p>{post.data.description}</p>
+        </li>
+      ))}
+    </ul>
+  )
+}

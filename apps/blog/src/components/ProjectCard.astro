@@ -1,0 +1,25 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, summary, status, stack } = project.data;
+---
+
+<article class="card">
+  <p class="status" data-status={status}>{status}</p>
+  <h3><a href={`/projects/${project.id}/`}>{title}</a></h3>
+  <p>{summary}</p>
+  {
+    stack.length > 0 && (
+      <ul class="chips" aria-label="Stack">
+        {stack.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    )
+  }
+</article>

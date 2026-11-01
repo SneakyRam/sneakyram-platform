@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Wait a week before proposing a new release. Most malicious npm versions are caught and
+    # pulled within days, so this keeps them out of the lockfile.
+    cooldown:
+      default-days: 7
+    groups:
+      astro:
+        patterns: ['astro', '@astrojs/*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

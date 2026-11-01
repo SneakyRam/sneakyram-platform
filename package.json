@@ -1,0 +1,26 @@
+{
+  "name": "sneakyram-platform",
+  "private": true,
+  "type": "module",
+  "description": "blog.sneakyram.in and docs.sneakyram.in, built from one repository",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "workspaces": [
+    "apps/blog",
+    "apps/docs"
+  ],
+  "scripts": {
+    "dev:blog": "npm run dev --workspace apps/blog",
+    "dev:docs": "npm run dev --workspace apps/docs",
+    "build": "npm run build --workspaces",
+    "test": "node --test \"scripts/**/*.test.mjs\"",
+    "check:writeups": "node scripts/check-writeups.mjs apps/docs/src/content/docs",
+    "verify": "npm test && npm run check:writeups && npm run build",
+    "preview:blog": "node scripts/serve.mjs apps/blog/dist 4321",
+    "preview:docs": "node scripts/serve.mjs apps/docs/dist 4322"
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3"
+  }
+}

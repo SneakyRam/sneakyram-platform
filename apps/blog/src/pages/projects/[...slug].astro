@@ -1,0 +1,50 @@
+---
+import { render } from 'astro:content';
+import PostList from '../../components/PostList.astro';
+import Base from '../../layouts/Base.astro';
+import { formatDate, getProjects, getPublishedPosts } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const buildLog = (await getPublishedPosts()).filter((post) => post.data.project?.id === project.id);
+const { title, summary, status, stack, started, repo, link } = project.data;
+---
+
+<Base title={title} description={summary}>
+  <article class="prose" data-pagefind-body>
+    <header class="article-header">
+      <p class="status" data-status={status}>{status}</p>
+      <h1>{title}</h1>
+      <p class="meta">Started {formatDate(started)}</p>
+      <p class="lead">{summary}</p>
+      {
+        stack.length > 0 && (
+          <ul class="chips" aria-label="Stack">
+            {stack.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        )
+      }
+      {
+        (repo || link) && (
+          <p class="links">
+            {repo && <a href={repo}>Source code</a>}
+            {link && <a href={link}>Live</a>}
+          </p>
+        )
+      }
+    </header>
+    <Content />
+  </article>
+
+  <section aria-labelledby="build-log">
+    <h2 id="build-log">Build log</h2>
+    <PostList posts={buildLog} empty="No build-log posts yet." />
+  </section>
+</Base>

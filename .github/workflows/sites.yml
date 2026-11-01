@@ -1,0 +1,109 @@
+# Builds and checks both sites on every push and pull request.
+# On main it then publishes the built files to two branches that Hostinger deploys from:
+#   deploy/blog -> blog.sneakyram.in        deploy/docs -> docs.sneakyram.in
+name: sites
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only by default. Only the deploy job gets write access, and only to this repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: sites-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      # Actions are pinned to full commit SHAs. A tag like v7 can be moved to different code;
+      # a commit SHA can't. Dependabot keeps these up to date.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # .npmrc sets ignore-scripts, so no dependency can run code while installing.
+      - run: npm ci
+
+      - name: Unit tests for the build scripts
+        run: npm test
+
+      - name: Write-up rules (retired content only, no flags or hashes)
+        run: npm run check:writeups
+
+      - name: Build both sites (includes CSP hashing and link checks)
+        run: npm run build
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sites
+          path: |
+            apps/blog/dist
+            apps/docs/dist
+          # .htaccess and .well-known/ start with a dot. Without this they are silently left out,
+          # and the sites would deploy with no security headers.
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sites
+          path: out
+
+      - name: Publish built files to the deploy branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          publish() {
+            local site="$1" src="$2" branch="deploy/$1" work
+            work="$(mktemp -d)"
+            if git ls-remote --exit-code --heads "$remote" "$branch" >/dev/null 2>&1; then
+              git clone --quiet --depth 1 --branch "$branch" "$remote" "$work"
+            else
+              git init --quiet --initial-branch "$branch" "$work"
+            fi
+
+            # Swap in this build's files but keep the branch history, so Hostinger can fast-forward.
+            find "$work" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+            cp -a "$src"/. "$work"/
+            git -C "$work" add --all
+            if git -C "$work" diff --cached --quiet; then
+              echo "$site: no changes"
+              return
+            fi
+
+            git -C "$work" \
+              -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet -m "Deploy $site from ${GITHUB_SHA::7}"
+            git -C "$work" push --quiet "$remote" "HEAD:refs/heads/$branch"
+            echo "$site: published to $branch"
+          }
+
+          publish blog out/blog/dist
+          publish docs out/docs/dist

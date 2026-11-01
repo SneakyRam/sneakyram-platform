@@ -1,0 +1,14 @@
+{
+  "name": "@sneakyram/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node ../../scripts/csp.mjs dist && node ../../scripts/check-links.mjs dist",
+    "preview": "node ../../scripts/serve.mjs dist 4322"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.42.8",
+    "astro": "^7.4.4"
+  }
+}

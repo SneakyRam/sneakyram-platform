@@ -1,0 +1,47 @@
+---
+// Wraps Starlight's own title and adds a short facts panel for write-ups.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+
+const data = Astro.locals.starlightRoute.entry.data as Record<string, any>;
+
+const platforms: Record<string, string> = {
+  htb: 'Hack The Box',
+  thm: 'TryHackMe',
+  portswigger: 'PortSwigger Academy',
+  other: 'Other',
+};
+const words = (value: string) => value.replaceAll('-', ' ');
+const retired: Date | undefined = data.retired;
+const techniques: string[] = data.techniques ?? [];
+
+const facts = [
+  data.platform && ['Platform', platforms[data.platform]],
+  data.kind && ['Type', words(data.kind)],
+  data.difficulty && ['Difficulty', words(data.difficulty)],
+  data.os && ['OS', data.os === 'os' ? 'Other' : data.os],
+  retired && ['Retired', retired.toISOString().slice(0, 10)],
+].filter(Boolean) as [string, string][];
+---
+
+<Default />
+{
+  facts.length > 0 && (
+    <div class="writeup-facts">
+      <dl>
+        {facts.map(([label, value]) => (
+          <div>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {techniques.length > 0 && (
+        <ul aria-label="Techniques">
+          {techniques.map((technique) => (
+            <li>{technique}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}

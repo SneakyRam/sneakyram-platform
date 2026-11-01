@@ -1,0 +1,59 @@
+/* Match the blog's green accent. */
+:root {
+  --sl-color-accent-low: #0b3324;
+  --sl-color-accent: #1fa874;
+  --sl-color-accent-high: #a7f3d0;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #c9f2e0;
+  --sl-color-accent: #0f8a5f;
+  --sl-color-accent-high: #064d34;
+}
+
+/* The facts panel under each write-up's title (src/components/PageTitle.astro). */
+.writeup-facts {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  background: var(--sl-color-gray-7, var(--sl-color-black));
+  font-size: var(--sl-text-sm);
+}
+
+.writeup-facts dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+}
+
+.writeup-facts dt {
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.writeup-facts dd {
+  margin: 0;
+  color: var(--sl-color-white);
+  text-transform: capitalize;
+}
+
+.writeup-facts ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.writeup-facts li {
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 999px;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-xs);
+}
