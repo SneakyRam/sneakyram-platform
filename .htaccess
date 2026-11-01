@@ -1,0 +1,42 @@
+# docs.sneakyram.in
+# Edit this file in apps/docs/public/.htaccess. After each build, scripts/csp.mjs copies it into
+# dist/ with 'sha256-7eCV4jtsr4t4knb3c4FCRPeu7GGZeOUGE3XvWix0XOQ=' 'sha256-GkZBRnvSuhtx/cvzvukVkX2JJZW+DdPlVr7BX8Tefqo=' 'sha256-VWo5Wp4aqSj6nSgMpeAp9cKieaoIfwFUAunAVugI5gA=' 'sha256-f/zAUE74ucc3JYp4r4QQvkJofoQdkOIhHYK+jeZ6eko=' 'sha256-wX2yOADeV+NMngflD5uYi3vl50SHC4sfM1EmylVjlX4=' replaced by the hashes of that build's inline scripts.
+
+ErrorDocument 404 /404.html
+Options -Indexes -MultiViews
+
+RewriteEngine On
+
+# This site's folder sits inside sneakyram.in's public_html, so the same files are also reachable
+# at sneakyram.in/docs/. Send those requests to the real hostname...
+RewriteCond %{HTTP_HOST} !^docs\.sneakyram\.in$ [NC]
+RewriteRule ^(.*)$ https://docs.sneakyram.in/$1 [R=301,L]
+
+# ...and plain HTTP to HTTPS. The second condition stops a redirect loop behind a proxy such as Cloudflare.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteRule ^(.*)$ https://docs.sneakyram.in/$1 [R=301,L]
+
+# Hostinger's Git deploy leaves a .git folder in this directory. Never serve it, or any other
+# dotfile or dot-folder, except /.well-known/ where security.txt lives.
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+<IfModule mod_headers.c>
+  # Only this site's own files can run. Inline scripts run only if their exact SHA-256 hash is
+  # listed. 'wasm-unsafe-eval' lets Pagefind's search run its WebAssembly; it does not allow eval().
+  # frame-src is ready for the comment box that will be embedded from studio.sneakyram.in.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-7eCV4jtsr4t4knb3c4FCRPeu7GGZeOUGE3XvWix0XOQ=' 'sha256-GkZBRnvSuhtx/cvzvukVkX2JJZW+DdPlVr7BX8Tefqo=' 'sha256-VWo5Wp4aqSj6nSgMpeAp9cKieaoIfwFUAunAVugI5gA=' 'sha256-f/zAUE74ucc3JYp4r4QQvkJofoQdkOIhHYK+jeZ6eko=' 'sha256-wX2yOADeV+NMngflD5uYi3vl50SHC4sfM1EmylVjlX4='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://studio.sneakyram.in; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Strict-Transport-Security "max-age=31536000"
+
+  # The parent sneakyram.in .htaccess caches every .js and .css file for a year. That suits the
+  # hashed files in /_astro/ (scripts/csp.mjs gives that folder its own rule), but not Pagefind's
+  # fixed file names or the pages themselves, so everything else here is revalidated.
+  <FilesMatch "\.(html|js|css|json|xml|txt)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
